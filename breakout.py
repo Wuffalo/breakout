@@ -83,11 +83,10 @@ WWT = df['Carrier'] == "TXAP-TL-STD_WWT"
 IngramMX = df['Customer'] == "Interamerica Forwarding C/O Ingram Micro Mexi"
 
 #df.sort_values(by=['Add'])
-df.sort_values(by=['Status','Load ID','Carrier'], inplace=True)
+df.sort_values(by=['Status','Carrier','Customer','Load ID'], inplace=True)
 
 #drop columns - SECOND PASS
 df = df.drop(columns=['TYPEDESCR','CUSTID','PROMISEDATE','Last Edit'])
-print(df.dtypes)
 
 #Check if dataframes are empty
 if DSLC.empty == True:
@@ -108,6 +107,10 @@ if test_code == True:
     print("RLCA Orders: \n",df[RLCA].head(2))
     print("WWT Orders: \n",df[WWT].head(2))
     print("Ingram MX Orders: \n",df[IngramMX].head(2))
+
+df.to_excel(writer, sheet_name='Main', index=False)
+worksheet = writer.sheets['Main']
+format_sheet()
 
 if show_DSLC == True:
     df[DSLC].to_excel(writer, sheet_name='DSLC', index=False)
