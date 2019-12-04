@@ -11,6 +11,7 @@ import pandas as pd
 import xlsxwriter
 import os
 import glob
+from datetime import datetime as dt, timedelta
 
 if os.path.exists("/mnt/c/Users/WMINSKEY/.pen/Breakout_py.xlsx"):
   os.remove("/mnt/c/Users/WMINSKEY/.pen/Breakout_py.xlsx")
@@ -28,8 +29,15 @@ def format_sheet():
     worksheet.set_column('H:H',4)
     worksheet.set_column('I:I',27)
     worksheet.set_column('J:J',13,format5)
-    worksheet.conditional_format('J2:J100', {'type': 'duplicate',
+    worksheet.conditional_format('J2:J'+str(len(df.index)+1), {'type': 'duplicate',
                                         'format': format3})
+    worksheet.conditional_format('E2:E'+str(len(df.index)+1), {
+        'type': 'date',
+        'criteria': 'less than',
+        'value': (dt.now()-timedelta(1)),
+        'format': format1
+        })
+    worksheet.autofilter('A1:J'+str(len(df.index)+1))
 
 if test_code == True:
     path_to_SOS = "/mnt/c/Users/WMINSKEY/.pen/SOS.csv" # change to latest_file
@@ -46,7 +54,7 @@ show_RLCA = True
 show_WWT = True
 show_IngramMX = True
 
-df = pd.read_csv(path_to_SOS)
+df = pd.read_csv(path_to_SOS, parse_dates=[11,19], infer_datetime_format=True)
 
 #columns to delete - INITIAL PASS
 df = df.drop(columns=['ORDERKEY','SO','SS','STORERKEY','INCOTERMS','ORDERDATE','ACTUALSHIPDATE','DAYSPASTDUE',
@@ -82,8 +90,8 @@ RLCA = df['Carrier'] == "RLCA-LTL-4_DAY"
 WWT = df['Carrier'] == "TXAP-TL-STD_WWT"
 IngramMX = df['Customer'] == "Interamerica Forwarding C/O Ingram Micro Mexi"
 
-#df.sort_values(by=['Add'])
-df.sort_values(by=['Status','Carrier','Customer','Load ID'], inplace=True)
+#sort table by decreasing importance
+df.sort_values(by=['Status','Carrier','Customer','Last Edit','Load ID'], inplace=True)
 
 #drop columns - SECOND PASS
 df = df.drop(columns=['TYPEDESCR','CUSTID','PROMISEDATE','Last Edit'])
@@ -108,10 +116,12 @@ if test_code == True:
     print("WWT Orders: \n",df[WWT].head(2))
     print("Ingram MX Orders: \n",df[IngramMX].head(2))
 
+#create and format main sheet of all orders
 df.to_excel(writer, sheet_name='Main', index=False)
 worksheet = writer.sheets['Main']
 format_sheet()
 
+#create various sheets if group type is present
 if show_DSLC == True:
     df[DSLC].to_excel(writer, sheet_name='DSLC', index=False)
     worksheet = writer.sheets['DSLC']
@@ -132,5 +142,13 @@ if show_IngramMX == True:
     df[IngramMX].to_excel(writer, sheet_name='IngramMX', index=False)
     worksheet = writer.sheets['IngramMX']
     format_sheet()
+
+#color tabs
+writer.sheets['Main'].set_tab_color('yellow')
+writer.sheets['DSLC'].set_tab_color('green')
+writer.sheets['Roanoke'].set_tab_color('orange')
+writer.sheets['RLCA'].set_tab_color('red')
+writer.sheets['WWT'].set_tab_color('blue')
+writer.sheets['IngramMX'].set_tab_color('purple')
 
 writer.save()
