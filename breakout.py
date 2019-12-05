@@ -13,10 +13,15 @@ import os
 import glob
 from datetime import datetime as dt, timedelta
 
-if os.path.exists("/mnt/c/Users/WMINSKEY/.pen/Breakout_py.xlsx"):
-  os.remove("/mnt/c/Users/WMINSKEY/.pen/Breakout_py.xlsx")
+output_directory = "/mnt/c/Users/WMINSKEY/.pen/"
+output_file_name = "Breakout_py.xlsx"
+path_to_output = output_directory+output_file_name
 
-path_to_output = "/mnt/c/Users/WMINSKEY/.pen/Breakout_py.xlsx"
+if os.path.exists(path_to_output):
+    if os.path.exists(output_directory+'~$'+output_file_name):
+        print("File is in use. Close \'"+path_to_output+"\' to try again.")
+        raise SystemExit
+    else: os.remove(path_to_output)
 
 show_DSLC = True
 show_ROANOKE = True
@@ -45,7 +50,6 @@ def format_sheet(X):
         'format': format1
         })
     worksheet.autofilter('A1:J'+str(X))
-
 
 list_of_files = glob.glob('/mnt/c/Users/WMINSKEY/Downloads/Shipment Order Summary -*.csv') # * means all if need specific format then *.csv
 latest_file = max(list_of_files, key=os.path.getctime)
