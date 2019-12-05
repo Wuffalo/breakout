@@ -13,22 +13,6 @@ import os
 import glob
 from datetime import datetime as dt, timedelta
 
-output_directory = "/mnt/c/Users/WMINSKEY/.pen/"
-output_file_name = "Breakout_py.xlsx"
-path_to_output = output_directory+output_file_name
-
-if os.path.exists(path_to_output):
-    if os.path.exists(output_directory+'~$'+output_file_name):
-        print("File is in use. Close \'"+path_to_output+"\' to try again.")
-        raise SystemExit
-    else: os.remove(path_to_output)
-
-show_DSLC = True
-show_ROANOKE = True
-show_RLCA = True
-show_WWT = True
-show_IngramMX = True
-
 def format_sheet(X):
     X = X+1
     worksheet.set_column('A:A',13)
@@ -42,14 +26,46 @@ def format_sheet(X):
     worksheet.set_column('I:I',27)
     worksheet.set_column('J:J',13,format5)
     worksheet.conditional_format('J2:J'+str(X), {'type': 'duplicate',
-                                        'format': format3})
+                                        'format': format4})
     worksheet.conditional_format('E2:E'+str(X), {
         'type': 'date',
-        'criteria': 'less than',
-        'value': (dt.now()-timedelta(1)),
+        'criteria': 'less than or equal to',
+        'value': (ctime-timedelta(1)),
         'format': format1
         })
+    worksheet.conditional_format('E2:E'+str(X), {
+        'type': 'date',
+        'criteria': 'between',
+        'minimum': ctime-timedelta(11/12),
+        'maximum': ctime-timedelta(1),
+        'format': format2
+        })
+    worksheet.conditional_format('E2:E'+str(X), {
+        'type': 'date',
+        'criteria': 'between',
+        'minimum': ctime-timedelta(4/5),
+        'maximum': ctime-timedelta(11/12),
+        'format': format3
+        })
     worksheet.autofilter('A1:J'+str(X))
+
+ctime = dt.now()
+
+show_DSLC = True
+show_ROANOKE = True
+show_RLCA = True
+show_WWT = True
+show_IngramMX = True
+
+output_directory = "/mnt/c/Users/WMINSKEY/.pen/"
+output_file_name = "Breakout_py.xlsx"
+path_to_output = output_directory+output_file_name
+
+if os.path.exists(path_to_output):
+    if os.path.exists(output_directory+'~$'+output_file_name):
+        print("File is in use. Close \'"+path_to_output+"\' to try again.")
+        raise SystemExit
+    else: os.remove(path_to_output)
 
 list_of_files = glob.glob('/mnt/c/Users/WMINSKEY/Downloads/Shipment Order Summary -*.csv') # * means all if need specific format then *.csv
 latest_file = max(list_of_files, key=os.path.getctime)
@@ -67,21 +83,22 @@ df = df.rename(columns={'EXTERNORDERKEY':'SO-SS','C_COMPANY':'Customer','ADDDATE
                         'TOTALORDERED':'QTY','SVCLVL':'Carrier','EXTERNALLOADID':'Load ID','EDITDATE':'Last Edit',
                         'C_STATE':'State','C_COUNTRY':'Country','Textbox6':'TIS'})
 
+#create xlsxwriter object
 writer = pd.ExcelWriter(path_to_output, engine='xlsxwriter')
 workbook = writer.book
 
 # Light red fill with dark red text.
 format1 = workbook.add_format({'bg_color':   '#FFC7CE',
                                'font_color': '#9C0006'})
-
-# Light yellow fill with dark yellow text.
-format2 = workbook.add_format({'bg_color':   '#FFEB9C',
-                               'font_color': '#9C6500'})
-
+# orange fill with dark orange text.
+format2 = workbook.add_format({'bg_color':   '#ffcc99',
+                               'font_color': '#804000'})
+# yellow fill with dark yellow text.
+format3 = workbook.add_format({'bg_color':    '#ffeb99',
+                                'font_color':   '#806600'})
 # Green fill with dark green text.
-format3 = workbook.add_format({'bg_color':   '#C6EFCE',
+format4 = workbook.add_format({'bg_color':   '#C6EFCE',
                                'font_color': '#006100'})
-
 format5 = workbook.add_format({'num_format': '#'})
 
 #Create DF queries
