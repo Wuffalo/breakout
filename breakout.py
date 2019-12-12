@@ -108,19 +108,19 @@ RLCA = df['Carrier'] == "RLCA-LTL-4_DAY"
 WWT = df['Carrier'] == "TXAP-TL-STD_WWT"
 IngramMX = df['Customer'] == "Interamerica Forwarding C/O Ingram Micro Mexi"
 
+#find lengths of main dataframe and each query
+main_length = len(df.index)
+DSLC_length = df.TYPEDESCR.value_counts()['DSLC Move']
+Roanoke_length = df.CUSTID.value_counts()['7128']
+RLCA_length = df.Carrier.value_counts()['RLCA-LTL-4_DAY']
+WWT_length = df.Carrier.value_counts()['TXAP-TL-STD_WWT']
+IngramMX_length = df.Customer.value_counts()['Interamerica Forwarding C/O Ingram Micro Mexi']
+
 #sort table by decreasing importance
 df.sort_values(by=['Status','Carrier','Customer','Last Edit','Load ID'], inplace=True)
 
 #drop columns - SECOND PASS
 df = df.drop(columns=['TYPEDESCR','CUSTID','PROMISEDATE','Last Edit'])
-
-#find lengths of main dataframe and each query
-main_length = len(df.index)
-DSLC_length = df[DSLC].TIS.count()
-Roanoke_length = df[ROANOKE].TIS.count()
-RLCA_length = df[RLCA].TIS.count()
-WWT_length = df[WWT].TIS.count()
-IngramMX_length = df[IngramMX].TIS.count()
 
 #Check if dataframes are empty
 if DSLC_length == 0:
@@ -142,27 +142,27 @@ writer.sheets['Main'].set_tab_color('yellow')
 
 #create various sheets if group type is present
 if show_DSLC == True:
-    df[DSLC].to_excel(writer, sheet_name='DSLC', index=False)
+    df.loc[DSLC].to_excel(writer, sheet_name='DSLC', index=False)
     worksheet = writer.sheets['DSLC']
     format_sheet(DSLC_length)
     writer.sheets['DSLC'].set_tab_color('green')
 if show_ROANOKE == True:
-    df[ROANOKE].to_excel(writer, sheet_name='Roanoke', index=False)
+    df.loc[ROANOKE].to_excel(writer, sheet_name='Roanoke', index=False)
     worksheet = writer.sheets['Roanoke']
     format_sheet(Roanoke_length)
     writer.sheets['Roanoke'].set_tab_color('orange')
 if show_RLCA == True:
-    df[RLCA].to_excel(writer, sheet_name='RLCA', index=False)
+    df.loc[RLCA].to_excel(writer, sheet_name='RLCA', index=False)
     worksheet = writer.sheets['RLCA']
     format_sheet(RLCA_length)
     writer.sheets['RLCA'].set_tab_color('red')
 if show_WWT == True:
-    df[WWT].to_excel(writer, sheet_name='WWT', index=False)
+    df.loc[WWT].to_excel(writer, sheet_name='WWT', index=False)
     worksheet = writer.sheets['WWT']
     format_sheet(WWT_length)
     writer.sheets['WWT'].set_tab_color('blue')
 if show_IngramMX == True:
-    df[IngramMX].to_excel(writer, sheet_name='IngramMX', index=False)
+    df.loc[IngramMX].to_excel(writer, sheet_name='IngramMX', index=False)
     worksheet = writer.sheets['IngramMX']
     format_sheet(IngramMX_length)
     writer.sheets['IngramMX'].set_tab_color('purple')
