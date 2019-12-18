@@ -17,13 +17,13 @@ def format_sheet(X):
     X = X+1
     worksheet.set_column('A:A',13)
     worksheet.set_column('B:B',45)
-    worksheet.set_column('C:C',5)
-    worksheet.set_column('D:D',7)
-    worksheet.set_column('E:E',22)
+    worksheet.set_column('C:C',7)
+    worksheet.set_column('D:D',9)
+    worksheet.set_column('E:E',19)
     worksheet.set_column('F:F',18)
     worksheet.set_column('G:G',10)
-    worksheet.set_column('H:H',4)
-    worksheet.set_column('I:I',27)
+    worksheet.set_column('H:H',7)
+    worksheet.set_column('I:I',29)
     worksheet.set_column('J:J',13,format5)
     worksheet.conditional_format('J2:J'+str(X), {'type': 'duplicate',
                                         'format': format4})
@@ -70,6 +70,9 @@ if os.path.exists(path_to_output):
 list_of_files = glob.glob('/mnt/c/Users/WMINSKEY/Downloads/Shipment Order Summary -*.csv') # * means all if need specific format then *.csv
 latest_file = max(list_of_files, key=os.path.getctime)
 path_to_SOS = latest_file
+
+file_time = os.path.getctime(path_to_SOS)
+update_time = dt.fromtimestamp(file_time).strftime('%m/%d/%Y %H:%M')
 
 df = pd.read_csv(path_to_SOS, parse_dates=[11,19], infer_datetime_format=True)
 
@@ -139,6 +142,7 @@ df.to_excel(writer, sheet_name='Main', index=False)
 worksheet = writer.sheets['Main']
 format_sheet(main_length)
 writer.sheets['Main'].set_tab_color('yellow')
+worksheet.write('M1',"Last Update at: "+str(update_time))
 
 #create various sheets if group type is present
 if show_DSLC == True:
