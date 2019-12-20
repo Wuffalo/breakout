@@ -22,7 +22,7 @@ def format_sheet(X):
     worksheet.set_column('E:E',19)
     worksheet.set_column('F:F',18)
     worksheet.set_column('G:G',10)
-    worksheet.set_column('H:H',7)
+    worksheet.set_column('H:H',7,format6)
     worksheet.set_column('I:I',29)
     worksheet.set_column('J:J',13,format5)
     worksheet.conditional_format('J2:J'+str(X), {'type': 'duplicate',
@@ -86,8 +86,11 @@ df = df.rename(columns={'EXTERNORDERKEY':'SO-SS','C_COMPANY':'Customer','ADDDATE
                         'TOTALORDERED':'QTY','SVCLVL':'Carrier','EXTERNALLOADID':'Load ID','EDITDATE':'Last Edit',
                         'C_STATE':'State','C_COUNTRY':'Country','Textbox6':'TIS'})
 
+#remove commas from number columns, allows for reading as number then formatting on output
+df['QTY'] = df['QTY'].str.replace(',', '')
+
 #create xlsxwriter object
-writer = pd.ExcelWriter(path_to_output, engine='xlsxwriter')
+writer = pd.ExcelWriter(path_to_output, engine='xlsxwriter', options={'strings_to_numbers': True})
 workbook = writer.book
 
 # Light red fill with dark red text.
@@ -103,6 +106,7 @@ format3 = workbook.add_format({'bg_color':    '#ffeb99',
 format4 = workbook.add_format({'bg_color':   '#C6EFCE',
                                'font_color': '#006100'})
 format5 = workbook.add_format({'num_format': '#'})
+format6 = workbook.add_format({'num_format': '#,##0'})
 
 #Create DF queries
 DSLC = df['TYPEDESCR'] == "DSLC Move"
@@ -122,7 +126,7 @@ IngramMX_length = df.Customer.value_counts()['Interamerica Forwarding C/O Ingram
 #sort table by decreasing importance
 df.sort_values(by=['Status','Carrier','Customer','Last Edit','Load ID'], inplace=True)
 
-#drop columns - SECOND PASS
+#drop columns - SECOND PASS after calculations are performed
 df = df.drop(columns=['TYPEDESCR','CUSTID','PROMISEDATE','Last Edit'])
 
 #Check if dataframes are empty
