@@ -87,7 +87,7 @@ df = df.rename(columns={'EXTERNORDERKEY':'SO-SS','C_COMPANY':'Customer','ADDDATE
                         'C_STATE':'State','C_COUNTRY':'Country','Textbox6':'TIS'})
 
 #remove commas from number columns, allows for reading as number then formatting on output
-df['QTY'] = df['QTY'].str.replace(',', '')
+# df['QTY'] = df['QTY'].str.replace(',', '')
 
 #create xlsxwriter object
 writer = pd.ExcelWriter(path_to_output, engine='xlsxwriter', options={'strings_to_numbers': True})
@@ -117,11 +117,26 @@ IngramMX = df['Customer'] == "Interamerica Forwarding C/O Ingram Micro Mexi"
 
 #find lengths of main dataframe and each query
 main_length = len(df.index)
-DSLC_length = df.TYPEDESCR.value_counts()['DSLC Move']
-Roanoke_length = df.CUSTID.value_counts()['7128']
-RLCA_length = df.Carrier.value_counts()['RLCA-LTL-4_DAY']
-WWT_length = df.Carrier.value_counts()['TXAP-TL-STD_WWT']
-IngramMX_length = df.Customer.value_counts()['Interamerica Forwarding C/O Ingram Micro Mexi']
+try:
+    DSLC_length = df.TYPEDESCR.value_counts()['DSLC Move']
+except:
+    DSLC_length == 0
+try:
+    Roanoke_length = df.CUSTID.value_counts()['7128']
+except:
+    Roanoke_length == 0
+try:
+    RLCA_length = df.Carrier.value_counts()['RLCA-LTL-4_DAY']
+except:
+    RLCA_length == 0
+try:
+    WWT_length = df.Carrier.value_counts()['TXAP-TL-STD_WWT']
+except:
+    WWT_length == 0
+try:
+    IngramMX_length = df.Customer.value_counts()['Interamerica Forwarding C/O Ingram Micro Mexi']
+except:
+    IngramMX_length == 0
 
 #sort table by decreasing importance
 df.sort_values(by=['Status','Carrier','Customer','Last Edit','Load ID'], inplace=True)
