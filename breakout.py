@@ -120,23 +120,23 @@ main_length = len(df.index)
 try:
     DSLC_length = df.TYPEDESCR.value_counts()['DSLC Move']
 except:
-    DSLC_length == 0
+    DSLC_length = 0
 try:
     Roanoke_length = df.CUSTID.value_counts()['7128']
 except:
-    Roanoke_length == 0
+    Roanoke_length = 0
 try:
     RLCA_length = df.Carrier.value_counts()['RLCA-LTL-4_DAY']
 except:
-    RLCA_length == 0
+    RLCA_length = 0
 try:
     WWT_length = df.Carrier.value_counts()['TXAP-TL-STD_WWT']
 except:
-    WWT_length == 0
+    WWT_length = 0
 try:
     IngramMX_length = df.Customer.value_counts()['Interamerica Forwarding C/O Ingram Micro Mexi']
 except:
-    IngramMX_length == 0
+    IngramMX_length = 0
 
 #sort table by decreasing importance
 df.sort_values(by=['Status','Carrier','Customer','Last Edit','Load ID'], inplace=True)
