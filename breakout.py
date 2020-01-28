@@ -4,7 +4,7 @@
 @author: wuffalo
 
 Breaks out groupings from SOS and special lanes
-DSLC, Roanoke, RLCA, WWT, IngramMX
+DSLC, Roanoke, RLCA, WWT, IngramMX, Avt
 """
 
 import pandas as pd
@@ -56,6 +56,7 @@ show_ROANOKE = True
 show_RLCA = True
 show_WWT = True
 show_IngramMX = True
+show_Avt = True
 
 output_directory = "/mnt/c/Users/WMINSKEY/.pen/"
 output_file_name = "Breakout_py.xlsx"
@@ -114,6 +115,7 @@ ROANOKE = df['CUSTID'] == "7128"
 RLCA = df['Carrier'] == "RLCA-LTL-4_DAY"
 WWT = df['Carrier'] == "TXAP-TL-STD_WWT"
 IngramMX = df['Customer'] == "Interamerica Forwarding C/O Ingram Micro Mexi"
+AVT = df['Carrier'] == "TXAP-TL-STD_MULTISTP"
 
 #find lengths of main dataframe and each query
 main_length = len(df.index)
@@ -137,6 +139,10 @@ try:
     IngramMX_length = df.Customer.value_counts()['Interamerica Forwarding C/O Ingram Micro Mexi']
 except:
     IngramMX_length = 0
+try:
+    AVT_length = df.Carrier.value_counts()['TXAP-TL-STD_MULTISTP']
+except:
+    AVT_length = 0
 
 #sort table by decreasing importance
 df.sort_values(by=['Status','Carrier','Customer','Last Edit','Load ID'], inplace=True)
@@ -155,6 +161,8 @@ if WWT_length == 0:
     show_WWT = False
 if IngramMX_length == 0:
     show_IngramMX = False
+if AVT_length == 0:
+    show_Avt = False
 
 #create and format main sheet of all orders
 df.to_excel(writer, sheet_name='Main', index=False)
@@ -189,5 +197,10 @@ if show_IngramMX == True:
     worksheet = writer.sheets['IngramMX']
     format_sheet(IngramMX_length)
     writer.sheets['IngramMX'].set_tab_color('purple')
+if show_Avt == True:
+    df.loc[AVT].to_excel(writer, sheet_name='Avt', index=False)
+    worksheet = writer.sheets['Avt']
+    format_sheet(AVT_length)
+    writer.sheets['Avt'].set_tab_color('#33CCCC')
 
 writer.save()
