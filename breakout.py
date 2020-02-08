@@ -12,6 +12,8 @@ import xlsxwriter
 import os
 import glob
 from datetime import datetime as dt, timedelta
+import pandas.io.formats.excel
+pandas.io.formats.excel.header_style = None
 
 def format_sheet(X):
     X = X+1
@@ -108,6 +110,8 @@ format4 = workbook.add_format({'bg_color':   '#C6EFCE',
                                'font_color': '#006100'})
 format5 = workbook.add_format({'num_format': '#'})
 format6 = workbook.add_format({'num_format': '#,##0'})
+format7 = workbook.add_format({'align': 'left'})
+# format7.set_align('right')
 
 #Create DF queries
 DSLC = df['TYPEDESCR'] == "DSLC Move"
@@ -202,5 +206,20 @@ if show_Avt == True:
     worksheet = writer.sheets['Avt']
     format_sheet(AVT_length)
     writer.sheets['Avt'].set_tab_color('#33CCCC')
+    worksheet.set_column('I:I',50,format7)
+
+# df2 = df.sort_values(['Carrier'], ascending=[True], inplace=True)
+
+gen_table = pd.pivot_table(df, index=['Carrier','Status'], values='QTY', aggfunc=['sum',len],margins=True)
+# gen_table = gen_table[gen_table.index.str.contains('LTL')]
+
+to_allocate = gen_table.query('Status == ["Allocated","Created Externally"]')
+
+to_allocate.to_excel(writer, sheet_name='Pivot')
+worksheet = writer.sheets['Pivot']
+worksheet.set_column('A:A',30,format7)
+# worksheet.set_align('A:A','left')
+worksheet.set_column('B:B',20)
+worksheet.set_column('C:C',6,format5)
 
 writer.save()
