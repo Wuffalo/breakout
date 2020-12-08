@@ -13,7 +13,6 @@ import os
 import glob
 from datetime import datetime as dt, timedelta
 import pandas.io.formats.excel
-pandas.io.formats.excel.header_style = None
 
 def format_sheet(X):
     X = X+1
@@ -49,7 +48,7 @@ def format_sheet(X):
         'maximum': ctime-timedelta(11/12),
         'format': format3
         })
-    worksheet.autofilter('A1:J'+str(X))
+    worksheet.autofilter('A1:K'+str(X))
 
 ctime = dt.now()
 
@@ -59,6 +58,7 @@ show_RLCA = True
 show_WWT = True
 show_IngramMX = True
 show_Avt = True
+show_Rockwell = True
 
 output_directory = "/mnt/c/Users/WMINSKEY/.pen/"
 output_file_name = "Breakout_py.xlsx"
@@ -81,13 +81,13 @@ df = pd.read_csv(path_to_SOS, parse_dates=[11,19], infer_datetime_format=True)
 
 #columns to delete - INITIAL PASS
 df = df.drop(columns=['ORDERKEY','SO','SS','STORERKEY','INCOTERMS','ORDERDATE','ACTUALSHIPDATE','DAYSPASTDUE',
-                'PASTDUE','ORDERVALUE','TOTALSHIPPED','EXCEP','STOP','PSI_FLAG','UDFNOTES','INTERNATIONALFLAG',
-                'BILLING','LOADEDTIME','UDFVALUE1'])
+                'PASTDUE','ORDERVALUE','TOTALSHIPPED','EXCEP','STOP','PSI_FLAG','SUSR5','INTERNATIONALFLAG',
+                'LOADEDTIME','UDFVALUE1'])
 
 #rename remaining columns
 df = df.rename(columns={'EXTERNORDERKEY':'SO-SS','C_COMPANY':'Customer','ADDDATE':'Add Date','STATUSDESCR':'Status',
                         'TOTALORDERED':'QTY','SVCLVL':'Carrier','EXTERNALLOADID':'Load ID','EDITDATE':'Last Edit',
-                        'C_STATE':'State','C_COUNTRY':'Country','Textbox6':'TIS'})
+                        'C_STATE':'State','C_COUNTRY':'Country','Textbox6':'TIS','BILLING':'Route'})
 
 #remove commas from number columns, allows for reading as number then formatting on output
 # df['QTY'] = df['QTY'].str.replace(',', '')
@@ -111,45 +111,51 @@ format4 = workbook.add_format({'bg_color':   '#C6EFCE',
 format5 = workbook.add_format({'num_format': '#'})
 format6 = workbook.add_format({'num_format': '#,##0'})
 format7 = workbook.add_format({'align': 'left'})
-# format7.set_align('right')
 
-#Create DF queries
+#Create DF queries, these are boolean masks
 DSLC = df['TYPEDESCR'] == "DSLC Move"
 ROANOKE = df['CUSTID'] == "7128"
 RLCA = df['Carrier'] == "RLCA-LTL-4_DAY"
 WWT = df['Carrier'] == "TXAP-TL-STD_WWT"
 IngramMX = df['Customer'] == "Interamerica Forwarding C/O Ingram Micro Mexi"
 AVT = df['Carrier'] == "TXAP-TL-STD_MULTISTP"
+ROCK = (df['CUSTID'] == '68275') & (df['State'] == 'IN')
 
 #find lengths of main dataframe and each query
 main_length = len(df.index)
 try:
-    DSLC_length = df.TYPEDESCR.value_counts()['DSLC Move']
+    DSLC_length = sum(DSLC)
 except:
     DSLC_length = 0
 try:
-    Roanoke_length = df.CUSTID.value_counts()['7128']
+    Roanoke_length = sum(Roanoke)
 except:
     Roanoke_length = 0
 try:
-    RLCA_length = df.Carrier.value_counts()['RLCA-LTL-4_DAY']
+    RLCA_length = sum(RLCA)
 except:
     RLCA_length = 0
 try:
-    WWT_length = df.Carrier.value_counts()['TXAP-TL-STD_WWT']
+    WWT_length = sum(WWT)
 except:
     WWT_length = 0
 try:
-    IngramMX_length = df.Customer.value_counts()['Interamerica Forwarding C/O Ingram Micro Mexi']
+    IngramMX_length = sum(IngramMX)
 except:
     IngramMX_length = 0
 try:
-    AVT_length = df.Carrier.value_counts()['TXAP-TL-STD_MULTISTP']
+    AVT_length = sum(AVT)
 except:
     AVT_length = 0
+try:
+    ROCK_length = sum(ROCK)
+except:
+    ROCK_length = 0
 
 #sort table by decreasing importance
 df.sort_values(by=['Status','Carrier','Customer','Last Edit','Load ID'], inplace=True)
+
+gen_table = pd.pivot_table(df, index=['Carrier','Status'], values=['QTY','Last Edit'], aggfunc={'QTY':'sum'},margins=False)
 
 #drop columns - SECOND PASS after calculations are performed
 df = df.drop(columns=['TYPEDESCR','CUSTID','PROMISEDATE','Last Edit'])
@@ -167,6 +173,8 @@ if IngramMX_length == 0:
     show_IngramMX = False
 if AVT_length == 0:
     show_Avt = False
+if ROCK_length == 0:
+    show_Rockwell = False
 
 #create and format main sheet of all orders
 df.to_excel(writer, sheet_name='Main', index=False)
@@ -206,19 +214,17 @@ if show_Avt == True:
     worksheet = writer.sheets['Avt']
     format_sheet(AVT_length)
     writer.sheets['Avt'].set_tab_color('#33CCCC')
-    worksheet.set_column('I:I',50,format7)
-
-# df2 = df.sort_values(['Carrier'], ascending=[True], inplace=True)
-
-gen_table = pd.pivot_table(df, index=['Carrier','Status'], values='QTY', aggfunc=['sum',len],margins=True)
-# gen_table = gen_table[gen_table.index.str.contains('LTL')]
+if show_Rockwell == True:
+    df.loc[ROCK].to_excel(writer, sheet_name='Rockwell', index=False)
+    worksheet = writer.sheets['Rockwell']
+    format_sheet(ROCK_length)
+    writer.sheets['Rockwell'].set_tab_color('purple')
 
 to_allocate = gen_table.query('Status == ["Allocated","Created Externally"]')
 
 to_allocate.to_excel(writer, sheet_name='Pivot')
 worksheet = writer.sheets['Pivot']
 worksheet.set_column('A:A',30,format7)
-# worksheet.set_align('A:A','left')
 worksheet.set_column('B:B',20)
 worksheet.set_column('C:C',6,format5)
 
