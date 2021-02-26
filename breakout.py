@@ -82,7 +82,7 @@ df = pd.read_csv(path_to_SOS, parse_dates=[11,19], infer_datetime_format=True)
 #columns to delete - INITIAL PASS
 df = df.drop(columns=['ORDERKEY','SO','SS','STORERKEY','INCOTERMS','ORDERDATE','ACTUALSHIPDATE','DAYSPASTDUE',
                 'PASTDUE','ORDERVALUE','TOTALSHIPPED','EXCEP','STOP','PSI_FLAG','SUSR5','INTERNATIONALFLAG',
-                'LOADEDTIME','UDFVALUE1'])
+                'LOADEDTIME','UDFVALUE1','ROUTE'])
 
 #rename remaining columns
 df = df.rename(columns={'EXTERNORDERKEY':'SO-SS','C_COMPANY':'Customer','ADDDATE':'Add Date','STATUSDESCR':'Status',
@@ -128,7 +128,7 @@ try:
 except:
     DSLC_length = 0
 try:
-    Roanoke_length = sum(Roanoke)
+    Roanoke_length = sum(ROANOKE)
 except:
     Roanoke_length = 0
 try:
