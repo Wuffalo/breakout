@@ -8,11 +8,11 @@ DSLC, Roanoke, RLCA, WWT, IngramMX, Avt
 """
 
 import pandas as pd
-import xlsxwriter
+#import xlsxwriter
 import os
 import glob
 from datetime import datetime as dt, timedelta
-import pandas.io.formats.excel
+#import pandas.io.formats.excel
 
 def format_sheet(X):
     X = X+1
@@ -52,6 +52,7 @@ def format_sheet(X):
 
 ctime = dt.now()
 
+# initializing block showing which filters are actively in use for corresponding output sheets
 show_DSLC = True
 show_ROANOKE = True
 show_RLCA = True
@@ -64,6 +65,7 @@ output_directory = "/mnt/c/Users/WMINSKEY/.pen/"
 output_file_name = "Breakout_py.xlsx"
 path_to_output = output_directory+output_file_name
 
+# finds previous output file and quits program while notifying if file is already open. Otherwise removes old output file.
 if os.path.exists(path_to_output):
     if os.path.exists(output_directory+'~$'+output_file_name):
         print("File is in use. Close \'"+path_to_output+"\' to try again.")
@@ -71,8 +73,7 @@ if os.path.exists(path_to_output):
     else: os.remove(path_to_output)
 
 list_of_files = glob.glob('/mnt/c/Users/WMINSKEY/Downloads/Shipment Order Summary -*.csv') # * means all if need specific format then *.csv
-latest_file = max(list_of_files, key=os.path.getctime)
-path_to_SOS = latest_file
+path_to_SOS = latest_file = max(list_of_files, key=os.path.getctime)
 
 file_time = os.path.getctime(path_to_SOS)
 update_time = dt.fromtimestamp(file_time).strftime('%m/%d/%Y %H:%M')
@@ -111,6 +112,8 @@ format4 = workbook.add_format({'bg_color':   '#C6EFCE',
 format5 = workbook.add_format({'num_format': '#'})
 format6 = workbook.add_format({'num_format': '#,##0'})
 format7 = workbook.add_format({'align': 'left'})
+#format7 = workbook.add_format()
+#format7 = format7.set_align('left')
 
 #Create DF queries, these are boolean masks
 DSLC = df['TYPEDESCR'] == "DSLC Move"
@@ -118,10 +121,10 @@ ROANOKE = df['CUSTID'] == "7128"
 RLCA = df['Carrier'] == "RLCA-LTL-4_DAY"
 WWT = df['Carrier'] == "TXAP-TL-STD_WWT"
 IngramMX = df['Customer'] == "Interamerica Forwarding C/O Ingram Micro Mexi"
-AVT = df['Carrier'] == "TXAP-TL-STD_MULTISTP"
+AVT = df['CUSTID'] == "401778414"
 ROCK = (df['CUSTID'] == '68275') & (df['State'] == 'IN')
 
-#find lengths of main dataframe and each query
+#find lengths of main dataframe and each query, null causes default 0 assignment
 main_length = len(df.index)
 try:
     DSLC_length = sum(DSLC)
@@ -155,7 +158,9 @@ except:
 #sort table by decreasing importance
 df.sort_values(by=['Status','Carrier','Customer','Last Edit','Load ID'], inplace=True)
 
+#create pivot table queries
 gen_table = pd.pivot_table(df, index=['Carrier','Status'], values=['QTY','Last Edit'], aggfunc={'QTY':'sum'},margins=False)
+gen_summary = pd.pivot_table(df, index=['Status'], values=['SO-SS','QTY'], aggfunc={'SO-SS':len,'QTY':'sum'}, margins=False)
 
 #drop columns - SECOND PASS after calculations are performed
 df = df.drop(columns=['TYPEDESCR','CUSTID','PROMISEDATE','Last Edit'])
@@ -222,10 +227,21 @@ if show_Rockwell == True:
 
 to_allocate = gen_table.query('Status == ["Allocated","Created Externally"]')
 
-to_allocate.to_excel(writer, sheet_name='Pivot')
-worksheet = writer.sheets['Pivot']
-worksheet.set_column('A:A',30,format7)
-worksheet.set_column('B:B',20)
-worksheet.set_column('C:C',6,format5)
+try: # add try/exception block because no orders in Allocated or Created External causes crash
+    to_allocate.to_excel(writer, sheet_name='To Start')
+    worksheet = writer.sheets['To Start']
+    worksheet.set_column('A:A',30,format7)
+    worksheet.set_column('B:B',20)
+    worksheet.set_column('C:C',6,format5)
+except:
+    print("No orders in Allocated or Created External. 'To Start' sheet not populated.")
+
+review = gen_summary.query('Status == ["Allocated","Created Externally","In Picking","QA Complete","Pack Ready","Released","Loaded"]')
+
+review.to_excel(writer, sheet_name='Summary')
+worksheet = writer.sheets['Summary']
+worksheet.set_column('A:A',20,format7)
+worksheet.set_column('B:B',10)
+worksheet.set_column('C:C',10)
 
 writer.save()
