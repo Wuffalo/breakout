@@ -8,7 +8,7 @@ DSLC, Roanoke, RLCA, WWT, IngramMX, Avt
 """
 
 import pandas as pd
-#import xlsxwriter
+#import xlsxwriter # included in pandas
 import os
 import glob
 from datetime import datetime as dt, timedelta
